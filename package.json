@@ -1,8 +1,8 @@
 {
   "name": "emitter",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A simple event emitter",
-  "main": "es5/emitter.js",
+  "main": "emitter.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "babel emitter.js -d es5"
