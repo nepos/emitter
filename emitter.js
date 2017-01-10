@@ -101,6 +101,7 @@ angular.module('app.emitter').factory('Emitter', function Emitter($rootScope, $l
 
 		my.construct = function() {
 			my.callbacks = {};
+			// window.__calbacks = my.callbacks;
 			return that;
 		};
 
@@ -111,24 +112,24 @@ angular.module('app.emitter').factory('Emitter', function Emitter($rootScope, $l
 		};
 
 		//bind to an event
-		my.on = function() {
+		my.on = function(...args) {
 			let index = -1;
 			let state = '';
 			let name = '';
 			let callback = function() {};
 
 			//two arguments: global listener, triggered in every situation
-			if(arguments.length === 2) {
+			if(args.length === 2) {
 				state = 'global';
-				name = arguments[0];
-				callback = arguments[1];
+				name = args[0];
+				callback = args[1];
 			}
 
 			//three arguments: state listener, triggered only if the user is on the current state
-			if(arguments.length === 3) {
-				state = arguments[0];
-				name = arguments[1];
-				callback = arguments[2];
+			if(args.length === 3) {
+				state = args[0];
+				name = args[1];
+				callback = args[2];
 			}
 
 			logger('bind', state, name);
@@ -143,7 +144,10 @@ angular.module('app.emitter').factory('Emitter', function Emitter($rootScope, $l
 			index = my.callbacks[state][name].push(callback) - 1;
 
 			if(index > 20) {
-				logger.error('more than 20 listeners binded to', state, name, 'is that correct?');
+				logger.error(`more than 20 listeners binded to ${state} ${name} is that correct?`);
+			}
+			if(state === 'global' && index > 0) {
+				logger.error(`just one listener allowed for global events ${name} is that correct?`);
 			}
 
 			logger.trace();
@@ -153,6 +157,7 @@ angular.module('app.emitter').factory('Emitter', function Emitter($rootScope, $l
 			return my.returnOff(index, name, state);
 		};
 
+		//
 		my.returnOff = function(index, name, state) {
 			return function() {
 				logger('remove', state, index);
@@ -169,23 +174,21 @@ angular.module('app.emitter').factory('Emitter', function Emitter($rootScope, $l
 		 *
 		 * Trigger something on your object. Its trigger local and global events automaticly. Returns nothing.
 		 *
-		 *	@param {string} eventname
-		 *	Name of the event to trigger
+		 * @param {string} eventname
+		 * Name of the event to trigger
 		 *
 		 * @param {*} args
 		 * Optional one or more arguments which will be passed onto the event listeners.
 		 *
 		 * @constructor
 		 */
-		that.trigger = function() {
-			const args = Array.prototype.slice.call(arguments);
-			const name = args.shift();
+		that.trigger = function(eventname, ...args) {
 			const state = my.getStateIdentifier();
 			logger('trigger', state, arguments);
 
 			//trigger global event listeners
-			if(my.callbacks.global && my.callbacks.global[name]) {
-				my.callbacks.global[name].forEach((callback) => {
+			if(my.callbacks.global && my.callbacks.global[eventname]) {
+				my.callbacks.global[eventname].forEach((callback) => {
 					$rootScope.$evalAsync(() => {
 						callback.apply(that, args);
 					});
@@ -193,8 +196,8 @@ angular.module('app.emitter').factory('Emitter', function Emitter($rootScope, $l
 			}
 
 			//trigger state parameters
-			if(my.callbacks[state] && my.callbacks[state][name]) {
-				my.callbacks[state][name].forEach((callback) => {
+			if(my.callbacks[state] && my.callbacks[state][eventname]) {
+				my.callbacks[state][eventname].forEach((callback) => {
 					$rootScope.$evalAsync(() => {
 						callback.apply(that, args);
 					});
@@ -203,24 +206,21 @@ angular.module('app.emitter').factory('Emitter', function Emitter($rootScope, $l
 		};
 
 		//helper function for local bindings
-		my.localOn = function() {
-			const args = [my.getStateIdentifier()].concat(_.toArray(arguments));
-			return my.on.apply(null, args);
+		my.localOn = function(...args) {
+			return my.on(my.getStateIdentifier(), ...args);
 		};
 
 		//helper function for global bindings
-		my.globalOn = function() {
-			return my.on.apply(null, _.toArray(arguments));
+		my.globalOn = function(...args) {
+			return my.on(...args);
 		};
 
 		//helper function for just listening one time
-		my.once = function() {
-			const args = _.toArray(arguments);
-			const name = args.shift();
+		my.once = function(name, ...args) {
 			const cb = args.pop();
-			const removeListener = my.globalOn(name, function() {
+			const removeListener = my.globalOn(name, () => {
 				removeListener();
-				cb(..._.toArray(arguments));
+				cb(name, ...args);
 			});
 			return removeListener;
 		};

@@ -2,9 +2,10 @@
   "name": "emitter",
   "version": "1.0.0",
   "description": "A simple event emitter",
-  "main": "emitter.js",
+  "main": "es5/emitter.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "babel emitter.js -d es5"
   },
   "repository": {
     "type": "git",
@@ -15,5 +16,8 @@
   "bugs": {
     "url": "https://github.com/nepos/emitter/issues"
   },
-  "homepage": "https://github.com/nepos/emitter#readme"
+  "homepage": "https://github.com/nepos/emitter#readme",
+  "devDependencies": {
+    "babel-cli": "^6.18.0"
+  }
 }
