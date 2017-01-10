@@ -1,0 +1,15 @@
+{
+  "name": "emitter",
+  "description": "The nepos event emitter",
+  "version": "1.0.0",
+  "main": "es5/emitter.js",
+  "authors": [
+    "paul lunow"
+  ],
+  "license": "MIT",
+  "homepage": "https://github.com/nepos/emitter",
+  "private": true,
+  "ignore": [
+    "node_modules"
+  ]
+}
